@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-5">
+            <h1 class="display-4">Welcome, {{ current_user.username }}!</h1>
+            <p class="lead">What would you like to do today?</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="feature-card">
+                    <h3 class="mb-4"><i class="fas fa-lock text-primary"></i> Encode Message</h3>
+                    <form action="{{ url_for('main.encode') }}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Select Image</label>
+                            <input type="file" name="image" class="form-control" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Secret Message</label>
+                            <textarea name="message" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Encryption Key</label>
+                            <div class="input-group">
+                                <input type="password" name="encode_key" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Remember this key for decoding</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-lock"></i> Encode
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="feature-card">
+                    <h3 class="mb-4"><i class="fas fa-unlock text-secondary"></i> Decode Message</h3>
+                    <form action="{{ url_for('main.decode') }}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Select Encoded Image</label>
+                            <input type="file" name="encoded_image" class="form-control" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Encryption Key</label>
+                            <div class="input-group">
+                                <input type="password" name="decode_key" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="fas fa-unlock"></i> Decode
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(button) {
+    const input = button.parentElement.querySelector('input');
+    const icon = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
+{% endblock %}
