@@ -4,7 +4,7 @@ import numpy as np
 def text_to_binary(text):
     return ''.join(format(ord(char), '08b') for char in text) + '00000000'
 
-def encode_image(image_path, text):
+def encode_image_lsb(image_path, text):
     try:
         # Open and prepare image
         img = Image.open(image_path)
@@ -42,7 +42,7 @@ def encode_image(image_path, text):
     except Exception as e:
         raise Exception(f"Encoding failed: {str(e)}")
 
-def decode_image(image_path):
+def decode_image_lsb(image_path):
     try:
         # Read image
         img = Image.open(image_path)
@@ -90,3 +90,78 @@ def binary_to_text(binary):
         pass
     
     return ''.join(message) if message else ''
+
+def encode_image(image_path, message):
+    try:
+        # Validate message contains only allowed characters
+        if not all(ord(char) < 128 for char in message):
+            raise ValueError("Message contains unsupported characters")
+            
+        img = Image.open(image_path)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Convert message to binary including spaces and special characters
+        binary_message = ''.join(format(ord(char), '08b') for char in message)
+        binary_message += '00000000'  # Add delimiter
+        
+        data_index = 0
+        data_len = len(binary_message)
+        
+        # Flatten image data
+        pixels = list(img.getdata())
+        width, height = img.size
+        
+        if data_len > len(pixels) * 3:
+            raise ValueError("Message too long for this image")
+            
+        # Embed data
+        modified_pixels = []
+        for i, pixel in enumerate(pixels):
+            r, g, b = pixel
+            if data_index < data_len:
+                r = (r & 0xFE) | int(binary_message[data_index])
+                data_index += 1
+            if data_index < data_len:
+                g = (g & 0xFE) | int(binary_message[data_index])
+                data_index += 1
+            if data_index < data_len:
+                b = (b & 0xFE) | int(binary_message[data_index])
+                data_index += 1
+            modified_pixels.append((r, g, b))
+            
+        # Create new image with embedded data
+        new_img = Image.new(img.mode, img.size)
+        new_img.putdata(modified_pixels)
+        return new_img
+        
+    except Exception as e:
+        raise Exception(f"Error encoding image: {str(e)}")
+
+def decode_image(image_path):
+    try:
+        img = Image.open(image_path)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+            
+        binary_data = ''
+        pixels = list(img.getdata())
+        
+        # Extract binary data
+        for r, g, b in pixels:
+            binary_data += str(r & 1)
+            binary_data += str(g & 1)
+            binary_data += str(b & 1)
+            
+        # Convert binary to text
+        message = ''
+        for i in range(0, len(binary_data), 8):
+            byte = binary_data[i:i+8]
+            if byte == '00000000':  # Found delimiter
+                break
+            message += chr(int(byte, 2))
+            
+        return message
+        
+    except Exception as e:
+        raise Exception(f"Error decoding image: {str(e)}")
