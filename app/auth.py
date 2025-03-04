@@ -49,11 +49,12 @@ def register():
             flash('Registration successful!', 'success')
             return redirect(url_for('auth.login'))
 
-        return render_template('auth/register.html')
+        return render_template('auth/register.html')  # Make sure this path is correct
     except Exception as e:
         current_app.logger.error(f"Registration error: {str(e)}")
         db.session.rollback()
         flash('An error occurred during registration', 'danger')
+        return render_template('auth/register.html')  # Return template instead of redirect on error
         return redirect(url_for('auth.register'))
 
 @auth.route('/logout')
